@@ -7,6 +7,7 @@ See 'release/text/readme.html' for the end user read-me.
 Gooengine4.3.2Patch
 ======
 
+Thank you to this repo, I used this as a base: https://github.com/linuxnoodle/goo-engine-linux-wrapper
 
 this repo contains patches to make goo engine 4.3.2 compile smoothly.
 
