@@ -15,6 +15,23 @@ occasionally i had to apply patches, which is accounted in this repo
 
 alternately you can just get an appimage and use goo engine
 
+to build:
+
+run 
+`` python build_files/utils/make_update.py --use-linux-libraries``
+
+then 
+
+``./build_files/build_environment/install_linux_packages.py``
+
+
+then
+
+``make -j$(nproc)``
+
+
+``
+
 Blender
 =======
 
