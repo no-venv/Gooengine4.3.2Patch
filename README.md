@@ -7,30 +7,16 @@ See 'release/text/readme.html' for the end user read-me.
 Gooengine4.3.2Patch
 ======
 
+
 this repo contains patches to make goo engine 4.3.2 compile smoothly.
 
-what i did different, is that i cloned the original blender 4.32 repository, then cloned goo engine's 4.32 repository, then copied the `source` and `scripts` folder from the goo engine to the blender 4.3.2, then compile
+what i did different, is that i cloned the original blender 4.32 repository, then cloned goo engine's 4.32 repository, then copied the `source` and `scripts` folder from the goo engine to the blender 4.3.2.
 
-occasionally i had to apply patches, which is accounted in this repo
+then i applied patch and compile.
 
-alternately you can just get an appimage and use goo engine
-
-to build:
-
-run 
-`` python build_files/utils/make_update.py --use-linux-libraries``
-
-then 
-
-``./build_files/build_environment/install_linux_packages.py``
+just run `python build.py` and it will apply patches and compile
 
 
-then
-
-``make -j$(nproc)``
-
-
-``
 
 Blender
 =======

@@ -1,0 +1,4 @@
+GridBuilder.h lib/linux_x64/openvdb/include/nanovdb/util/GridBuilder.h
+childrenProxy.h lib/linux_x64/usd/include/pxr/usd/sdf/childrenProxy.h
+buildinfo.c source/creator/buildinfo.c
+OpenColorIO.h lib/linux_x64/opencolorio/include/OpenColorIO/OpenColorIO.h
