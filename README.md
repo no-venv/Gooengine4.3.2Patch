@@ -5,7 +5,6 @@ See 'release/text/readme.html' for the end user read-me.
 -->
 
 Gooengine4.3.2Patch
-
 ======
 
 this repo contains patches to make goo engine 4.3.2 compile smoothly.
