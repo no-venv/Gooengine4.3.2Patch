@@ -75,3 +75,4 @@ CMakePresets.json
 CMakeUserPresets.json
 
 /lib
+/lib/*
