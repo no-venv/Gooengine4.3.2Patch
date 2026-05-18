@@ -1331,6 +1331,22 @@ typedef struct NodeTexEnvironment {
   char _pad[4];
 } NodeTexEnvironment;
 
+typedef struct NodeSdfPrimitive {
+  NodeTexBase base;
+  int mode;
+  int invert;
+} NodeSdfPrimitive;
+
+typedef struct NodeSdfOp {
+  int operation;
+  int invert;
+} NodeSdfOp;
+
+typedef struct NodeSdfVectorOp {
+  int operation;
+  int axis;
+} NodeSdfVectorOp;
+
 typedef struct NodeTexGabor {
   NodeTexBase base;
   /* Stores NodeGaborType. */
@@ -1387,6 +1403,13 @@ typedef struct NodeShaderAttribute {
   int type;
   char _pad[4];
 } NodeShaderAttribute;
+
+typedef struct NodeShaderInfo {
+  int light_group_bits[4];
+  int light_group_shadow_bits[4];
+  char use_own_light_groups;
+  char _pad[7];
+} NodeShaderInfo;
 
 typedef struct NodeShaderVectTransform {
   int type;
@@ -1506,6 +1529,41 @@ typedef struct NodeShaderTexIES {
 typedef struct NodeShaderOutputAOV {
   char name[64];
 } NodeShaderOutputAOV;
+
+typedef struct NodeTexHexagon {
+  NodeTexBase base;
+  int coord_mode;
+  int value_mode;
+  int direction;
+  int use_clamp;
+} NodeTexHexagon;
+
+typedef struct NodeTwirl {
+  NodeTexBase base;
+  float amount;
+  float center[2];
+  char _pad[4];
+} NodeTwirl;
+
+typedef struct NodeWaterRipples {
+  NodeTexBase base;
+  float vector[3];
+  float time;
+  /** See eNodeWaterRipplesMode. */
+  int mode;
+  float scale;
+  float intensity;
+  float speed;
+  float detail;
+  float bias;
+} NodeWaterRipples;
+
+typedef enum eNodeWaterRipplesMode {
+  NODE_WATER_RIPPLES_DROPS = 0,
+  NODE_WATER_RIPPLES_RIPPLES = 1,
+  NODE_WATER_RIPPLES_FLOW = 2,
+  NODE_WATER_RIPPLES_CAUSTIC = 3
+} eNodeWaterRipplesMode;
 
 typedef struct NodeSunBeams {
   float source[2];
@@ -2369,6 +2427,18 @@ enum {
   SHD_SKY_NISHITA = 2,
 };
 
+/* Hexagon node coords. */
+enum {
+  SHD_HEXAGON_COORDS_XY = 0,
+  SHD_HEXAGON_COORDS_HEX = 1,
+};
+/* Hexagon node value mode. */
+enum {
+  SHD_HEXAGON_VALUE_HEX = 0,
+  SHD_HEXAGON_VALUE_SDF = 1,
+  SHD_HEXAGON_VALUE_DOT = 2,
+};
+
 /* environment texture */
 enum {
   SHD_PROJ_EQUIRECTANGULAR = 0,
@@ -2607,6 +2677,129 @@ enum {
   NODE_MAP_RANGE_STEPPED = 1,
   NODE_MAP_RANGE_SMOOTHSTEP = 2,
   NODE_MAP_RANGE_SMOOTHERSTEP = 3,
+};
+
+/* Sdf node. */
+enum {
+  SHD_SDF_2D_CIRCLE = 0,
+  SHD_SDF_2D_RECTANGLE = 1,
+  SHD_SDF_2D_RHOMBUS = 2,
+  SHD_SDF_2D_TRIANGLE = 3,
+  SHD_SDF_2D_LINE = 4,
+  SHD_SDF_2D_STAR = 5,
+  SHD_SDF_2D_HEXAGON = 6,
+  SHD_SDF_3D_SPHERE = 7,
+  SHD_SDF_3D_BOX = 8,
+  SHD_SDF_3D_TORUS = 9,
+  SHD_SDF_3D_CONE = 10,
+  SHD_SDF_3D_POINT_CYLINDER = 11,
+  SHD_SDF_3D_CAPSULE = 12,
+  SHD_SDF_3D_OCTAHEDRON = 13,
+  SHD_SDF_3D_HEX_PRISM = 14,
+  SHD_SDF_2D_PIE = 15,
+  SHD_SDF_2D_ARC = 16,
+  SHD_SDF_2D_BEZIER = 17,
+  SHD_SDF_2D_UNEVEN_CAPSULE = 18,
+  SHD_SDF_2D_POINT_TRIANGLE = 19,
+  SHD_SDF_2D_TRAPEZOID = 20,
+  SHD_SDF_2D_VESICA = 21,
+  SHD_SDF_2D_CROSS = 22,
+  SHD_SDF_2D_ROUNDX = 23,
+  SHD_SDF_2D_HORSESHOE = 24,
+  SHD_SDF_2D_PARABOLA = 25,
+  SHD_SDF_2D_ELLIPSE = 26,
+  SHD_SDF_2D_ISOSCELES = 27,
+  SHD_SDF_2D_ROUND_JOINT = 28,
+  SHD_SDF_2D_FLAT_JOINT = 29,
+  SHD_SDF_2D_PENTAGON = 30,
+  SHD_SDF_2D_PARABOLA_SEGMENT = 31,
+  SHD_SDF_2D_MOON = 32,
+  SHD_SDF_2D_QUAD = 33,
+  SHD_SDF_3D_PLANE = 34,
+  SHD_SDF_3D_SOLID_ANGLE = 35,
+  SHD_SDF_3D_PYRAMID = 36,
+  SHD_SDF_3D_POINT_CONE = 37,
+  SHD_SDF_2D_HEART = 38,
+  SHD_SDF_3D_CYLINDER = 39,
+  SHD_SDF_3D_HEX_PRISM_INCIRCLE = 40,
+  SHD_SDF_2D_CORNER = 41,
+  SHD_SDF_3D_CIRCLE = 42,
+  SHD_SDF_3D_DISC = 43,
+};
+
+/* SDF op types */
+enum {
+  SHD_SDF_OP_DILATE = 0,
+  SHD_SDF_OP_ONION = 1,
+  SHD_SDF_OP_BLEND = 2,
+  SHD_SDF_OP_ANNULAR = 3,
+  SHD_SDF_OP_FLATTEN = 4,
+  SHD_SDF_OP_INVERT = 5,
+  SHD_SDF_OP_PIPE = 6,
+  SHD_SDF_OP_ENGRAVE = 7,
+  SHD_SDF_OP_GROOVE = 8,
+  SHD_SDF_OP_TONGUE = 9,
+  SHD_SDF_OP_UNION = 10,
+  SHD_SDF_OP_INTERSECT = 11,
+  SHD_SDF_OP_DIFF = 12,
+  SHD_SDF_OP_UNION_SMOOTH = 13,
+  SHD_SDF_OP_INTERSECT_SMOOTH = 14,
+  SHD_SDF_OP_DIFF_SMOOTH = 15,
+  SHD_SDF_OP_UNION_CHAMFER = 16,
+  SHD_SDF_OP_INTERSECT_CHAMFER = 17,
+  SHD_SDF_OP_DIFF_CHAMFER = 18,
+  SHD_SDF_OP_UNION_ROUND = 19,
+  SHD_SDF_OP_INTERSECT_ROUND = 20,
+  SHD_SDF_OP_DIFF_ROUND = 21,
+  SHD_SDF_OP_UNION_COLUMNS = 22,
+  SHD_SDF_OP_INTERSECT_COLUMNS = 23,
+  SHD_SDF_OP_DIFF_COLUMNS = 24,
+  SHD_SDF_OP_UNION_STAIRS = 25,
+  SHD_SDF_OP_INTERSECT_STAIRS = 26,
+  SHD_SDF_OP_DIFF_STAIRS = 27,
+  SHD_SDF_OP_MASK = 28,
+  SHD_SDF_OP_DIVIDE = 29,
+  SHD_SDF_OP_EXCLUSION = 30,
+  SHD_SDF_OP_PULSE = 31,
+};
+
+/* SDF mod types */
+enum {
+  SHD_SDF_VEC_OP_EXTRUDE = 0,
+  SHD_SDF_VEC_OP_REPEAT_INF = 1,
+  SHD_SDF_VEC_OP_REPEAT_FINITE = 2,
+  SHD_SDF_VEC_OP_TWIST = 3,
+  SHD_SDF_VEC_OP_BEND = 4,
+  SHD_SDF_VEC_OP_SWIZZLE = 5,
+  SHD_SDF_VEC_OP_ROTATE = 6,
+  SHD_SDF_VEC_OP_REFLECT = 7,
+  SHD_SDF_VEC_OP_MIRROR = 8,
+  SHD_SDF_VEC_OP_POLAR = 9,
+  SHD_SDF_VEC_OP_MAP_UV = 10,
+  SHD_SDF_VEC_OP_MAP_11 = 11,
+  SHD_SDF_VEC_OP_ROTATE_UV = 12,
+  SHD_SDF_VEC_OP_RND_UV = 13,
+  SHD_SDF_VEC_OP_OCTANT = 14,
+  SHD_SDF_VEC_OP_TILESET = 15,
+  SHD_SDF_VEC_OP_SPIN = 16,
+  SHD_SDF_VEC_OP_GRID = 17,
+  SHD_SDF_VEC_OP_RND_UV_FLIP = 18,
+  SHD_SDF_VEC_OP_SCALE_UV = 19,
+  SHD_SDF_VEC_OP_SWIRL = 20,
+  SHD_SDF_VEC_OP_RADIAL_SHEAR = 21,
+  SHD_SDF_VEC_OP_PINCH_INFLATE = 22,
+  SHD_SDF_VEC_OP_REPEAT_INF_MIRROR = 23,
+  SHD_SDF_VEC_OP_MAP_05 = 24,
+};
+
+/* SDF axis types */
+enum {
+  SHD_SDF_AXIS_XYZ = 0,
+  SHD_SDF_AXIS_XZY = 1,
+  SHD_SDF_AXIS_YXZ = 2,
+  SHD_SDF_AXIS_YZX = 3,
+  SHD_SDF_AXIS_ZXY = 4,
+  SHD_SDF_AXIS_ZYX = 5,
 };
 
 /* mix rgb node flags */

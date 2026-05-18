@@ -200,7 +200,8 @@ std::unique_ptr<GreasePencilStrokeOperation> new_weight_paint_blur_operation();
 std::unique_ptr<GreasePencilStrokeOperation> new_weight_paint_average_operation();
 std::unique_ptr<GreasePencilStrokeOperation> new_weight_paint_smear_operation();
 std::unique_ptr<GreasePencilStrokeOperation> new_smooth_operation(BrushStrokeMode stroke_mode,
-                                                                  bool temp_smooth = false);
+                                                                  bool temp_smooth = false,
+                                                                  int context_type = 0);
 std::unique_ptr<GreasePencilStrokeOperation> new_thickness_operation(BrushStrokeMode stroke_mode);
 std::unique_ptr<GreasePencilStrokeOperation> new_strength_operation(BrushStrokeMode stroke_mode);
 std::unique_ptr<GreasePencilStrokeOperation> new_randomize_operation(BrushStrokeMode stroke_mode);

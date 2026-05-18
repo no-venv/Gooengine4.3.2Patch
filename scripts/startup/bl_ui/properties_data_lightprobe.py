@@ -21,6 +21,7 @@ class DATA_PT_context_lightprobe(DataButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
     COMPAT_ENGINES = {
+        'BLENDER_EEVEE',
         'BLENDER_RENDER',
         'BLENDER_EEVEE_NEXT'
     }
@@ -40,7 +41,7 @@ class DATA_PT_context_lightprobe(DataButtonsPanel, Panel):
 
 class DATA_PT_lightprobe(DataButtonsPanel, Panel):
     bl_label = "Probe"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -142,7 +143,7 @@ class DATA_PT_lightprobe_eevee_next(DataButtonsPanel, Panel):
 class DATA_PT_lightprobe_visibility(DataButtonsPanel, Panel):
     bl_label = "Visibility"
     bl_parent_id = "DATA_PT_lightprobe"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -292,6 +293,7 @@ class DATA_PT_lightprobe_parallax(DataButtonsPanel, Panel):
     bl_label = "Custom Parallax"
     bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {
+        'BLENDER_EEVEE',
         'BLENDER_RENDER',
         'BLENDER_EEVEE_NEXT',
     }
@@ -325,7 +327,7 @@ class DATA_PT_lightprobe_parallax(DataButtonsPanel, Panel):
 class DATA_PT_lightprobe_display(DataButtonsPanel, Panel):
     bl_label = "Viewport Display"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout

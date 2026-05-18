@@ -877,6 +877,14 @@ int BKE_object_material_ensure(Main *bmain, Object *ob, Material *material)
   return index;
 }
 
+bool BKE_material_use_custom_holdout(Material* ma)
+{
+  if (ma == NULL || ma->blend_method == MA_BM_SOLID) {
+    return false;
+  }
+  return true;
+}
+
 Material *BKE_gpencil_material(Object *ob, short act)
 {
   Material *ma = BKE_object_material_get(ob, act);
@@ -2019,6 +2027,13 @@ static void material_default_surface_init(Material *ma)
   output->locy = 300.0f;
 
   blender::bke::node_set_active(ntree, output);
+
+  const uint32_t default_light_groups[4] = {
+      0,0,0,1
+  };
+
+  copy_v4_v4_int(ma->light_group_bits, (int*) default_light_groups);
+  copy_v4_v4_int(ma->light_group_shadow_bits, (int*) default_light_groups);
 }
 
 static void material_default_volume_init(Material *ma)

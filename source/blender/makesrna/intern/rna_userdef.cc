@@ -5144,6 +5144,12 @@ static void rna_def_userdef_view(BlenderRNA *brna)
       "Changes the thickness of widget outlines, lines and dots in the interface");
   RNA_def_property_update(prop, 0, "rna_userdef_gpu_update");
 
+  prop = RNA_def_property(srna, "viewport_line_width", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_ui_text(
+      prop, "Viewport Line Width", "Changes the appearance of only lines in the 3D viewport");
+  RNA_def_property_range(prop, 1.0f, 3.0f);
+  RNA_def_property_update(prop, 0, "rna_userdef_gpu_update");
+
   /* display */
   prop = RNA_def_property(srna, "show_tooltips", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "flag", USER_TOOLTIPS);
@@ -6633,6 +6639,15 @@ static void rna_def_userdef_input(BlenderRNA *brna)
       "Let the mouse wrap around the view boundaries so mouse movements are not limited by the "
       "screen size (used by transform, dragging of UI controls, etc.)");
 
+  prop = RNA_def_property(srna, "use_accumulative_trackball", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "uiflag", USER_ACCUMULATE_TRACKBALL);
+  RNA_def_property_ui_text(
+      prop,
+      "Continuous Trackball",
+      "Continuously accumulate trackball rotation as the mouse is moved, rather than applying it all at once. "
+      "Allows for more intuitive trackball rotations when moving the mouse a larger distance."
+      );
+
   prop = RNA_def_property(srna, "use_drag_immediately", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "flag", USER_RELEASECONFIRM);
   RNA_def_property_ui_text(prop,
@@ -7280,6 +7295,13 @@ static void rna_def_userdef_filepaths(BlenderRNA *brna)
       "Online Access",
       "The user has been shown the \"Online Access\" prompt and make a choice");
 
+  prop = RNA_def_property(srna, "save_version_warning", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_negative_sdna(prop, nullptr, "flag", USER_FLAG_VERSION_SCRIPT);
+  RNA_def_property_boolean_default(prop, true);
+  RNA_def_property_ui_text(prop,
+                           "Embed Version Warning Popup",
+                           "Embed a script that provides a warning pop-up if this file is opened in a non-GooEngine build");
+
   /* Directories. */
 
   prop = RNA_def_property(srna, "font_directory", PROP_STRING, PROP_DIRPATH);
@@ -7508,6 +7530,22 @@ static void rna_def_userdef_experimental(BlenderRNA *brna)
   RNA_def_property_boolean_sdna(prop, nullptr, "use_new_point_cloud_type", 1);
   RNA_def_property_ui_text(
       prop, "New Point Cloud Type", "Enable the new point cloud type in the ui");
+
+  prop = RNA_def_property(srna, "disable_material_icon", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "disable_material_icon", 1);
+  RNA_def_property_ui_text(
+      prop,
+      "Disable Material Icon Rendering",
+      "If true, Material Preview Icons will NOT be rendered. "
+      "This can prevent stuttering from opening the material ID menu");
+
+  prop = RNA_def_property(srna, "disable_search_on_keypress", PROP_BOOLEAN, PROP_NONE);
+  RNA_def_property_boolean_sdna(prop, nullptr, "disable_search_on_keypress", 1);
+  RNA_def_property_ui_text(
+      prop,
+      "Disable Search On Key Press",
+      "Ignore menus tagged with Search On Key Press, and fallback to using accelerator keys instead");
+
 
   prop = RNA_def_property(srna, "use_new_curves_tools", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "use_new_curves_tools", 1);

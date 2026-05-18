@@ -39,6 +39,9 @@ void DepsgraphNodeBuilder::build_scene_camera(Scene *scene)
   if (scene->camera != nullptr) {
     build_object(-1, scene->camera, DEG_ID_LINKED_INDIRECTLY, true);
   }
+  if (scene->gn_camera_override != nullptr) {
+    build_object(-1, scene->gn_camera_override, DEG_ID_LINKED_INDIRECTLY, true);
+  }
   LISTBASE_FOREACH (TimeMarker *, marker, &scene->markers) {
     if (!ELEM(marker->camera, nullptr, scene->camera)) {
       build_object(-1, marker->camera, DEG_ID_LINKED_INDIRECTLY, true);

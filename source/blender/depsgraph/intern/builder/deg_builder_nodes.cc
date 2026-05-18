@@ -1989,6 +1989,10 @@ void DepsgraphNodeBuilder::build_nodetree(bNodeTree *ntree)
         /* TODO(sergey): Use visibility of owner of the node tree. */
         build_object(-1, node_scene->camera, DEG_ID_LINKED_INDIRECTLY, true);
       }
+      if (node_scene->gn_camera_override != nullptr) {
+        /* TODO(sergey): Use visibility of owner of the node tree. */
+        build_object(-1, node_scene->gn_camera_override, DEG_ID_LINKED_INDIRECTLY, true);
+      }
     }
     else if (id_type == ID_TXT) {
       /* Ignore script nodes. */

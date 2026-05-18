@@ -3056,6 +3056,9 @@ void DepsgraphRelationBuilder::build_nodetree(bNodeTree *ntree)
       if (node_scene->camera != nullptr) {
         build_object(node_scene->camera);
       }
+      if (node_scene->gn_camera_override != nullptr) {
+        build_object(node_scene->gn_camera_override);
+      }
     }
     else if (id_type == ID_TXT) {
       /* Ignore script nodes. */

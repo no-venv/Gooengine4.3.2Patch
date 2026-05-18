@@ -11127,7 +11127,8 @@ static void rna_def_modifier_grease_pencil_texture(BlenderRNA *brna)
   rna_def_modifier_grease_pencil_vertex_group(
       srna, "rna_GreasePencilTextureModifier_vertex_group_name_set");
 
-  rna_def_modifier_panel_open_prop(srna, "open_influence_panel", 0);
+  rna_def_modifier_panel_open_prop(srna, "open_random_panel", 0);
+  rna_def_modifier_panel_open_prop(srna, "open_influence_panel", 1);
 
   RNA_define_lib_overridable(true);
 
@@ -11177,6 +11178,46 @@ static void rna_def_modifier_grease_pencil_texture(BlenderRNA *brna)
   RNA_def_property_enum_items(prop, fit_type_items);
   RNA_def_property_ui_text(prop, "Fit Method", "");
   RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
+
+  prop = RNA_def_property(srna, "rnd_uv_offset", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_uv_offset");
+  RNA_def_property_ui_text(prop, "Random UV Offset", "Value for changes in stroke UV location");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "rnd_uv_rot", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_uv_rot");
+  RNA_def_property_ui_text(prop, "Random UV Rotaiton", "Value for changes in stroke UV rotation");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "rnd_uv_scale", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_uv_scale");
+  RNA_def_property_ui_text(prop, "Random UV Scale", "Value for changes in stroke UV scale");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "rnd_fill_offset", PROP_FLOAT, PROP_TRANSLATION);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_fill_offset");
+  RNA_def_property_ui_text(prop, "Random Fill Offset", "Value for changes in fill location");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "rnd_fill_rot", PROP_FLOAT, PROP_EULER);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_fill_rot");
+  RNA_def_property_ui_text(prop, "Random Fill Rotation", "Value for changes in fill rotation");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 100, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "rnd_fill_scale", PROP_FLOAT, PROP_NONE);
+  RNA_def_property_float_sdna(prop, NULL, "rnd_fill_scale");
+  RNA_def_property_ui_text(prop, "Random Fill Scale", "Value for changes in fill scale");
+  RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
+
+  prop = RNA_def_property(srna, "seed", PROP_INT, PROP_UNSIGNED);
+  RNA_def_property_ui_text(prop, "Seed", "Random seed");
+  RNA_def_property_update(prop, 0, "rna_Modifier_update");
 
   prop = RNA_def_property(srna, "mode", PROP_ENUM, PROP_NONE);
   RNA_def_property_enum_sdna(prop, nullptr, "mode");

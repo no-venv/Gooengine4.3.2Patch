@@ -251,6 +251,7 @@ void POSE_OT_constraint_add_with_targets(wmOperatorType *ot);
 
 void OBJECT_OT_constraints_copy(wmOperatorType *ot);
 void POSE_OT_constraints_copy(wmOperatorType *ot);
+void POSE_OT_constraints_merge(wmOperatorType *ot);
 
 void OBJECT_OT_constraints_clear(wmOperatorType *ot);
 void POSE_OT_constraints_clear(wmOperatorType *ot);

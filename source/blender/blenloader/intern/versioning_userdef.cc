@@ -843,7 +843,7 @@ void blo_do_versions_userdef(UserDef *userdef)
 
   if (!USER_VERSION_ATLEAST(278, 6)) {
     /* Clear preference flags for re-use. */
-    userdef->flag &= ~(USER_FLAG_NUMINPUT_ADVANCED | (1 << 2) | USER_FLAG_UNUSED_3 |
+    userdef->flag &= ~(USER_FLAG_NUMINPUT_ADVANCED | (1 << 2) | USER_FLAG_VERSION_SCRIPT |
                        USER_FLAG_UNUSED_6 | USER_FLAG_UNUSED_7 | USER_INTERNET_ALLOW |
                        USER_DEVELOPER_UI);
     userdef->uiflag &= ~(USER_HEADER_BOTTOM);
@@ -1082,7 +1082,7 @@ void blo_do_versions_userdef(UserDef *userdef)
       userdef->pixelsize = 1.0f;
     }
     /* Clear old userdef flag for "Camera Parent Lock". */
-    userdef->uiflag &= ~USER_UIFLAG_UNUSED_3;
+    userdef->uiflag &= ~USER_ACCUMULATE_TRACKBALL;
   }
 
   if (!USER_VERSION_ATLEAST(292, 9)) {

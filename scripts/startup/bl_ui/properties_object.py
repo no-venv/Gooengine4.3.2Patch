@@ -373,6 +373,7 @@ class OBJECT_PT_visibility(ObjectButtonsPanel, Panel):
     bl_options = {'DEFAULT_CLOSED'}
     COMPAT_ENGINES = {
         'BLENDER_RENDER',
+        'BLENDER_EEVEE',
         'BLENDER_EEVEE_NEXT',
         'BLENDER_WORKBENCH',
     }
@@ -447,6 +448,7 @@ class OBJECT_PT_shading(ObjectButtonsPanel, Panel):
 
     COMPAT_ENGINES = {
         'BLENDER_RENDER',
+        'BLENDER_EEVEE',
         'BLENDER_EEVEE_NEXT',
     }
 
@@ -557,6 +559,7 @@ class OBJECT_PT_animation(ObjectButtonsPanel, PropertiesAnimationMixin, Property
 class OBJECT_PT_custom_props(ObjectButtonsPanel, PropertyPanel, Panel):
     COMPAT_ENGINES = {
         'BLENDER_RENDER',
+        'BLENDER_EEVEE',
         'BLENDER_WORKBENCH',
     }
     _context_path = "object"

@@ -222,14 +222,18 @@ typedef struct Material {
   char blend_method; /* TODO(fclem): Deprecate once we remove legacy EEVEE. */
   char blend_shadow; /* TODO(fclem): Deprecate once we remove legacy EEVEE. */
   char blend_flag;
+  char check_shadow_id;
+  
+  /* Goo-engine */
+  int light_group_bits[4];
+  int light_group_shadow_bits[4];
 
   /* Volume. */
   char volume_intersection_method;
+  char _pad3[3];
 
   /* Displacement. */
   float inflate_bounds;
-
-  char _pad3[4];
 
   /**
    * Cached slots for texture painting, must be refreshed via
@@ -246,6 +250,8 @@ typedef struct Material {
 } Material;
 
 /* **************** MATERIAL ********************* */
+
+#define MA_GROUPS_ALL 0xFFFFFFFF
 
 /* maximum number of materials per material array.
  * (on object, mesh, light, etc.). limited by
@@ -393,6 +399,10 @@ enum {
 enum {
   MA_THICKNESS_SPHERE = 0,
   MA_THICKNESS_SLAB = 1,
+};
+
+enum {
+  MA_SHADOW_ID = (1 << 0)
 };
 
 /* Grease Pencil Stroke styles */

@@ -219,8 +219,19 @@ class MATERIAL_PT_gpencil_animation(GPMaterialButtonsPanel, PropertiesAnimationM
     _animated_id_context_property = "material"
 
 
+class MATERIAL_PT_gpencil_preview(GPMaterialButtonsPanel, Panel):
+    bl_label = "Preview"
+    COMPAT_ENGINES = {'BLENDER_EEVEE'}
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        ma = context.material
+        self.layout.label(text=ma.name)
+        self.layout.template_preview(ma)
+
+
 class MATERIAL_PT_gpencil_custom_props(GPMaterialButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_WORKBENCH'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_WORKBENCH'}
     _context_path = "object.active_material"
     _property_type = bpy.types.Material
 
@@ -257,6 +268,7 @@ classes = (
     MATERIAL_PT_gpencil_settings,
     MATERIAL_PT_gpencil_animation,
     MATERIAL_PT_gpencil_custom_props,
+    MATERIAL_PT_gpencil_preview,
 )
 
 if __name__ == "__main__":  # only for live edit.

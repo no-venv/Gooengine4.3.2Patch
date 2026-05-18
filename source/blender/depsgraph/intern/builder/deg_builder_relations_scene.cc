@@ -30,12 +30,18 @@ void DepsgraphRelationBuilder::build_scene_render(Scene *scene, ViewLayer *view_
   if (scene->camera != nullptr) {
     build_object(scene->camera);
   }
+  if (scene->gn_camera_override != nullptr) {
+    build_object(scene->gn_camera_override);
+  }
 }
 
 void DepsgraphRelationBuilder::build_scene_camera(Scene *scene)
 {
   if (scene->camera != nullptr) {
     build_object(scene->camera);
+  }
+  if (scene->gn_camera_override != nullptr) {
+    build_object(scene->gn_camera_override);
   }
   LISTBASE_FOREACH (TimeMarker *, marker, &scene->markers) {
     if (!ELEM(marker->camera, nullptr, scene->camera)) {

@@ -561,6 +561,8 @@ set(GLSL_SRC
   shaders/material/gpu_shader_material_combine_hsv.glsl
   shaders/material/gpu_shader_material_combine_rgb.glsl
   shaders/material/gpu_shader_material_combine_xyz.glsl
+  shaders/material/gpu_shader_material_curvature.glsl
+  shaders/material/gpu_shader_material_light_info.glsl
   shaders/material/gpu_shader_material_diffuse.glsl
   shaders/material/gpu_shader_material_displacement.glsl
   shaders/material/gpu_shader_material_eevee_specular.glsl
@@ -589,6 +591,7 @@ set(GLSL_SRC
   shaders/material/gpu_shader_material_normal.glsl
   shaders/material/gpu_shader_material_normal_map.glsl
   shaders/material/gpu_shader_material_object_info.glsl
+  shaders/material/gpu_shader_material_oklab_colorramp.glsl
   shaders/material/gpu_shader_material_output_aov.glsl
   shaders/material/gpu_shader_material_output_material.glsl
   shaders/material/gpu_shader_material_output_world.glsl
@@ -598,12 +601,20 @@ set(GLSL_SRC
   shaders/material/gpu_shader_material_ray_portal.glsl
   shaders/material/gpu_shader_material_refraction.glsl
   shaders/material/gpu_shader_material_rgb_to_bw.glsl
+  shaders/material/gpu_shader_material_screenspace_info.glsl
+  shaders/material/gpu_shader_material_set_depth.glsl
+  shaders/material/gpu_shader_material_sdf_noise.glsl
+  shaders/material/gpu_shader_material_sdf_util.glsl
+  shaders/material/gpu_shader_material_sdf_primitive.glsl
+  shaders/material/gpu_shader_material_sdf_op.glsl
+  shaders/material/gpu_shader_material_sdf_vector_op.glsl
   shaders/material/gpu_shader_material_separate_color.glsl
   shaders/material/gpu_shader_material_separate_hsv.glsl
   shaders/material/gpu_shader_material_separate_rgb.glsl
   shaders/material/gpu_shader_material_separate_xyz.glsl
   shaders/material/gpu_shader_material_set.glsl
   shaders/material/gpu_shader_material_shader_to_rgba.glsl
+  shaders/material/gpu_shader_material_shader_info.glsl
   shaders/material/gpu_shader_material_sheen.glsl
   shaders/material/gpu_shader_material_squeeze.glsl
   shaders/material/gpu_shader_material_subsurface_scattering.glsl
@@ -619,6 +630,9 @@ set(GLSL_SRC
   shaders/material/gpu_shader_material_tex_sky.glsl
   shaders/material/gpu_shader_material_texture_coordinates.glsl
   shaders/material/gpu_shader_material_tex_voronoi.glsl
+  shaders/material/gpu_shader_material_tex_hexagon.glsl
+  shaders/material/gpu_shader_material_twirl.glsl
+  shaders/material/gpu_shader_material_water_ripples.glsl
   shaders/material/gpu_shader_material_tex_wave.glsl
   shaders/material/gpu_shader_material_tex_white_noise.glsl
   shaders/material/gpu_shader_material_toon.glsl
@@ -776,6 +790,16 @@ set(SRC_SHADER_CREATE_INFOS
   ../draw/engines/workbench/shaders/infos/workbench_shadow_info.hh
   ../draw/engines/workbench/shaders/infos/workbench_transparent_resolve_info.hh
   ../draw/engines/workbench/shaders/infos/workbench_volume_info.hh
+
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_bloom_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_common_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_dof_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_effects_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_lightprobe_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_material_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_motion_blur_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_shadow_info.hh
+  ../draw/engines/gooengine/shaders/infos/eevee_legacy_volume_info.hh
 
   ../draw/engines/image/shaders/infos/engine_image_info.hh
   ../draw/intern/shaders/draw_debug_create_info.hh

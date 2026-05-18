@@ -574,6 +574,7 @@ class NODE_MT_category_GEO_TEXTURE(Menu):
         node_add_menu.add_node_type(layout, "ShaderNodeTexVoronoi")
         node_add_menu.add_node_type(layout, "ShaderNodeTexWave")
         node_add_menu.add_node_type(layout, "ShaderNodeTexWhiteNoise")
+        node_add_menu.add_node_type(layout, "ShaderNodeTexHexagon")   
         node_add_menu.draw_assets_for_catalog(layout, self.bl_label)
 
 

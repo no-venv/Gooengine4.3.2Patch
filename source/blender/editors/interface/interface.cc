@@ -4172,6 +4172,7 @@ static uiBut *ui_but_new(const eButType type)
       but = MEM_new<uiButHSVCube>("uiButHSVCube");
       break;
     case UI_BTYPE_COLORBAND:
+    case UI_BTYPE_OKLAB_COLORBAND:
       but = MEM_new<uiButColorBand>("uiButColorBand");
       break;
     case UI_BTYPE_CURVE:

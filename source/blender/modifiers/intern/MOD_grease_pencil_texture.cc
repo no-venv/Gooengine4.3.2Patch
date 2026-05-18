@@ -10,6 +10,8 @@
 #include "BLI_index_range.hh"
 #include "BLI_math_base.hh"
 #include "BLI_span.hh"
+#include "BLI_hash.h"
+#include "BLI_rand.h"
 
 #include "DNA_defaults.h"
 #include "DNA_modifier_types.h"
@@ -76,6 +78,8 @@ static void foreach_ID_link(ModifierData *md, Object *ob, IDWalkFunc walk, void 
 
 static void write_stroke_transforms(bke::greasepencil::Drawing &drawing,
                                     const IndexMask &curves_mask,
+                                    const GreasePencilTextureModifierData &tmd,
+                                    const Object &ob,
                                     const float offset,
                                     const float rotation,
                                     const float scale,
@@ -97,16 +101,41 @@ static void write_stroke_transforms(bke::greasepencil::Drawing &drawing,
 
   curves.ensure_evaluated_lengths();
 
+  /* Make sure different modifiers get different seeds. */
+  const int seed = tmd.seed + BLI_hash_string(ob.id.name + 2) + BLI_hash_string(tmd.modifier.name);
+  const float rand_offset = BLI_hash_int_01(seed);
+
+  /* Generates a random number for loc/rot/scale channels, based on seed and a per-stroke random
+   * value r. */
+  auto get_random_channel = [&](const char channel, const double r) {
+    float rand = fmodf(r * 2.0f - 1.0f + rand_offset, 1.0f);
+    return fmodf(sin(rand * 12.9898f + channel * 78.233f) * 43758.5453f, 1.0f);
+  };
+
+  auto get_random_value = [&](const char channel, const int64_t curve_i, const float scale) {
+    const uint halton_primes[3] = {2, 3, 7};
+    double halton_offset[3] = {0.0f, 0.0f, 0.0f};
+    double r[3];
+    /* To ensure a nice distribution, we use halton sequence and offset using the curve index. */
+    BLI_halton_3d(halton_primes, halton_offset, curve_i, r);
+    return get_random_channel(channel, r[0]) * scale;
+  };
+
   curves_mask.foreach_index(GrainSize(512), [&](int64_t curve_i) {
     const IndexRange points = points_by_curve[curve_i];
     const bool is_cyclic = cyclic[curve_i];
     const Span<float> lengths = curves.evaluated_lengths_for_curve(curve_i, is_cyclic);
     const float norm = normalize_u ? math::safe_rcp(lengths.last()) : 1.0f;
 
-    u_translations.span[curve_i] += offset;
-    u_scales.span[curve_i] *= scale * norm;
+    /* Randomness factors for loc/rot/scale per curve. */
+    const float loc_factor = get_random_value(0, curve_i, tmd.rnd_uv_offset);
+    const float rot_factor = get_random_value(1, curve_i, tmd.rnd_uv_rot);
+    const float scale_factor = get_random_value(2, curve_i, tmd.rnd_uv_scale);
+
+    u_translations.span[curve_i] += offset + loc_factor;
+    u_scales.span[curve_i] *= (scale + scale_factor) * norm;
     for (const int point_i : points) {
-      rotations.span[point_i] += rotation;
+      rotations.span[point_i] += rotation + rot_factor;
     }
   });
 
@@ -162,6 +191,8 @@ static void get_legacy_stroke_matrix(const Span<float3> positions,
 
 static void write_fill_transforms(bke::greasepencil::Drawing &drawing,
                                   const IndexMask &curves_mask,
+                                  const GreasePencilTextureModifierData &tmd,
+                                  const Object &ob,
                                   const float2 &offset,
                                   const float rotation,
                                   const float scale)
@@ -198,9 +229,45 @@ static void write_fill_transforms(bke::greasepencil::Drawing &drawing,
   const Span<float3> positions = curves.positions();
   Array<float4x2> texture_matrices(drawing.texture_matrices());
 
+  /* Make sure different modifiers get different seeds. */
+  const int seed = tmd.seed + BLI_hash_string(ob.id.name + 2) + BLI_hash_string(tmd.modifier.name);
+  const float rand_offset = BLI_hash_int_01(seed);
+
+  /* Generates a random number for loc/rot/scale channels, based on seed and a per-stroke random
+   * value r. */
+  auto get_random_channel = [&](const char channel, const double r) {
+    float rand = fmodf(r * 2.0f - 1.0f + rand_offset, 1.0f);
+    return fmodf(sin(rand * 12.9898f + channel * 78.233f) * 43758.5453f, 1.0f);
+  };
+
+  auto get_random_value = [&](const char channel, const int64_t curve_i, const float scale) {
+    const uint halton_primes[3] = {2, 3, 7};
+    double halton_offset[3] = {0.0f, 0.0f, 0.0f};
+    double r[3];
+    /* To ensure a nice distribution, we use halton sequence and offset using the curve index. */
+    BLI_halton_3d(halton_primes, halton_offset, curve_i, r);
+    return get_random_channel(channel, r[0]) * scale;
+  };
+
+  auto get_random_vector = [&](const char channel, const int64_t curve_i, const float2 scale) {
+    const uint halton_primes[2] = {2, 3};
+    double halton_offset[2] = {0.0f, 0.0f};
+    double r[2];
+    /* To ensure a nice distribution, we use halton sequence and offset using the curve index. */
+    BLI_halton_2d(halton_primes, halton_offset, curve_i, r);
+    return float2(get_random_channel(channel, r[0]) * scale[0],
+                  get_random_channel(channel, r[1]) * scale[1]);
+  };
+
   curves_mask.foreach_index(GrainSize(512), [&](int64_t curve_i) {
     const IndexRange points = curves.points_by_curve()[curve_i];
     float4x2 &texture_matrix = texture_matrices[curve_i];
+    
+    /* Randomness factors for loc/rot/scale per curve. */
+    const float2 loc_factor = get_random_vector(0, curve_i, tmd.rnd_fill_offset);
+    const float rot_factor = get_random_value(1, curve_i, tmd.rnd_fill_rot);
+    const float scale_factor = get_random_value(2, curve_i, tmd.rnd_fill_scale);
+    
     /* Factor out the stroke-to-layer transform part used by GPv2.
      * This may not be the same as the transform used by GPv3 for concave shapes due to a
      * simplistic normal calculation, but we want to achieve the same effect as GPv2 so have to use
@@ -222,9 +289,9 @@ static void write_fill_transforms(bke::greasepencil::Drawing &drawing,
     const float legacy_uv_rotation = uv_rotation;
     const float2 legacy_uv_scale = 0.5f * uv_scale;
 
-    const float2 legacy_uv_translation_new = legacy_uv_translation + offset;
-    const float legacy_uv_rotation_new = legacy_uv_rotation + rotation;
-    const float2 legacy_uv_scale_new = legacy_uv_scale * scale;
+    const float2 legacy_uv_translation_new = legacy_uv_translation + offset + loc_factor;
+    const float legacy_uv_rotation_new = legacy_uv_rotation + rotation + rot_factor;
+    const float2 legacy_uv_scale_new = legacy_uv_scale * (scale + scale_factor);
 
     const float2 uv_translation_new =
         (rotate_by_angle(legacy_uv_translation_new, legacy_uv_rotation_new) + 0.5f) *
@@ -249,6 +316,12 @@ static void modify_curves(const GreasePencilTextureModifierData &tmd,
                           const ModifierEvalContext &ctx,
                           bke::greasepencil::Drawing &drawing)
 {
+  bke::CurvesGeometry &curves = drawing.strokes_for_write();
+
+  if (curves.points_num() == 0) {
+    return;
+  }
+
   IndexMaskMemory mask_memory;
   const IndexMask curves_mask = modifier::greasepencil::get_filtered_stroke_mask(
       ctx.object, drawing.strokes(), tmd.influence, mask_memory);
@@ -257,17 +330,17 @@ static void modify_curves(const GreasePencilTextureModifierData &tmd,
   switch (GreasePencilTextureModifierMode(tmd.mode)) {
     case MOD_GREASE_PENCIL_TEXTURE_STROKE:
       write_stroke_transforms(
-          drawing, curves_mask, tmd.uv_offset, tmd.alignment_rotation, tmd.uv_scale, normalize_u);
+          drawing, curves_mask, tmd, *ctx.object, tmd.uv_offset, tmd.alignment_rotation, tmd.uv_scale, normalize_u);
       break;
     case MOD_GREASE_PENCIL_TEXTURE_FILL:
       write_fill_transforms(
-          drawing, curves_mask, tmd.fill_offset, tmd.fill_rotation, tmd.fill_scale);
+          drawing, curves_mask, tmd, *ctx.object, tmd.fill_offset, tmd.fill_rotation, tmd.fill_scale);
       break;
     case MOD_GREASE_PENCIL_TEXTURE_STROKE_AND_FILL:
       write_stroke_transforms(
-          drawing, curves_mask, tmd.uv_offset, tmd.alignment_rotation, tmd.uv_scale, normalize_u);
+          drawing, curves_mask, tmd, *ctx.object, tmd.uv_offset, tmd.alignment_rotation, tmd.uv_scale, normalize_u);
       write_fill_transforms(
-          drawing, curves_mask, tmd.fill_offset, tmd.fill_rotation, tmd.fill_scale);
+          drawing, curves_mask, tmd, *ctx.object, tmd.fill_offset, tmd.fill_rotation, tmd.fill_scale);
       break;
   }
 }
@@ -327,6 +400,20 @@ static void panel_draw(const bContext *C, Panel *panel)
     uiItemR(col, ptr, "fill_rotation", UI_ITEM_NONE, nullptr, ICON_NONE);
     uiItemR(col, ptr, "fill_offset", UI_ITEM_NONE, IFACE_("Offset"), ICON_NONE);
     uiItemR(col, ptr, "fill_scale", UI_ITEM_NONE, IFACE_("Scale"), ICON_NONE);
+  }
+
+  if (uiLayout *random_layout = uiLayoutPanelProp(
+          C, layout, ptr, "open_random_panel", IFACE_("Randomize")))
+  {
+    uiLayout *subcol = uiLayoutColumn(random_layout, false);
+
+    uiItemR(subcol, ptr, "rnd_uv_offset", UI_ITEM_NONE, IFACE_("Stroke Offset"), ICON_NONE);
+    uiItemR(subcol, ptr, "rnd_uv_rot", UI_ITEM_NONE, IFACE_("Stroke Rotation"), ICON_NONE);
+    uiItemR(subcol, ptr, "rnd_uv_scale", UI_ITEM_NONE, IFACE_("Stroke Scale"), ICON_NONE);
+    uiItemR(subcol, ptr, "rnd_fill_rot", UI_ITEM_NONE, IFACE_("Fill Rot"), ICON_NONE);
+    uiItemR(subcol, ptr, "rnd_fill_offset", UI_ITEM_NONE, IFACE_("Fill Offset"), ICON_NONE);
+    uiItemR(subcol, ptr, "rnd_fill_scale", UI_ITEM_NONE, IFACE_("Fill Scale"), ICON_NONE);
+    uiItemR(subcol, ptr, "seed", UI_ITEM_NONE, nullptr, ICON_NONE);
   }
 
   if (uiLayout *influence_panel = uiLayoutPanelProp(

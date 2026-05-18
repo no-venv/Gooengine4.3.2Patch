@@ -39,6 +39,11 @@ void register_shader_nodes()
   register_node_type_sh_combhsv();
   register_node_type_sh_combrgb();
   register_node_type_sh_combxyz();
+  register_node_type_sh_tex_hexagon();
+  register_node_type_sh_twirl();
+  register_node_type_sh_water_ripples();
+  register_node_type_sh_light_info();
+  register_node_type_sh_curvature();
   register_node_type_sh_curve_float();
   register_node_type_sh_curve_rgb();
   register_node_type_sh_curve_vec();
@@ -73,11 +78,14 @@ void register_shader_nodes()
   register_node_type_sh_point_info();
   register_node_type_sh_rgb();
   register_node_type_sh_rgbtobw();
+  register_node_type_sh_screenspace_info();
   register_node_type_sh_script();
   register_node_type_sh_sepcolor();
   register_node_type_sh_sephsv();
   register_node_type_sh_seprgb();
   register_node_type_sh_sepxyz();
+  register_node_type_sh_set_depth();
+  register_node_type_sh_shader_info();
   register_node_type_sh_shadertorgb();
   register_node_type_sh_squeeze();
   register_node_type_sh_subsurface_scattering();
@@ -100,6 +108,7 @@ void register_shader_nodes()
   register_node_type_sh_uvalongstroke();
   register_node_type_sh_uvmap();
   register_node_type_sh_valtorgb();
+  register_node_type_sh_oklab_color_ramp();
   register_node_type_sh_value();
   register_node_type_sh_vect_math();
   register_node_type_sh_vect_transform();
@@ -112,4 +121,8 @@ void register_shader_nodes()
   register_node_type_sh_volume_scatter();
   register_node_type_sh_wavelength();
   register_node_type_sh_wireframe();
+  register_node_type_sh_sdf_primitive();
+  register_node_type_sh_sdf_op();
+  register_node_type_sh_sdf_vector_op();
+  register_node_type_sh_sdf_noise();
 }

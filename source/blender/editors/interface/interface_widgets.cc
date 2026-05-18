@@ -5022,6 +5022,15 @@ void ui_draw_but(const bContext *C, ARegion *region, uiStyle *style, uiBut *but,
         break;
       }
 
+      case UI_BTYPE_OKLAB_COLORBAND: {
+        /* Horizontal padding to make room for handles at edges. */
+        const int padding = BLI_rcti_size_y(rect) / 6;
+        rect->xmin += padding;
+        rect->xmax -= padding;
+        ui_draw_but_OKLAB_COLORBAND(but, &tui->wcol_regular, rect);
+        break;
+      }
+
       case UI_BTYPE_UNITVEC:
         wt = widget_type(UI_WTYPE_UNITVEC);
         break;

@@ -100,6 +100,8 @@
 
 #include "BLO_read_write.hh"
 
+#include "engines/gooengine/eevee_lightcache.h"
+
 #include "IMB_colormanagement.hh"
 #include "IMB_imbuf.hh"
 
@@ -203,7 +205,7 @@ static void scene_init_data(ID *id)
     pset->brush[PE_BRUSH_CUT].strength = 1.0f;
   }
 
-  STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE_NEXT);
+  STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE);
 
   STRNCPY(scene->r.pic, U.renderdir);
 
@@ -451,6 +453,11 @@ static void scene_free_data(ID *id)
     BKE_libblock_free_data_py(&scene->master_collection->id);
     MEM_freeN(scene->master_collection);
     scene->master_collection = nullptr;
+  }
+
+  if (scene->eevee.light_cache_data) {
+    EEVEE_lightcache_free(scene->eevee.light_cache_data);
+    scene->eevee.light_cache_data = nullptr;
   }
 
   if (scene->display.shading.prop) {
@@ -847,6 +854,7 @@ static void scene_foreach_id(ID *id, LibraryForeachIDData *data)
   const int flag = BKE_lib_query_foreachid_process_flags_get(data);
 
   BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, scene->camera, IDWALK_CB_NOP);
+  BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, scene->gn_camera_override, IDWALK_CB_NOP);
   BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, scene->world, IDWALK_CB_USER);
   BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, scene->set, IDWALK_CB_NEVER_SELF);
   BKE_LIB_FOREACHID_PROCESS_IDSUPER(data, scene->clip, IDWALK_CB_USER);
@@ -995,12 +1003,21 @@ static void scene_foreach_cache(ID *id,
   Scene *scene = (Scene *)id;
   if (scene->ed != nullptr) {
     IDCacheKey key;
+    // IDCacheKey key{};
     key.id_session_uid = id->session_uid;
     /* Preserve VSE thumbnail cache across global undo steps. */
     key.identifier = offsetof(Editing, runtime.thumbnail_cache);
+    key.identifier = offsetof(Scene, eevee.light_cache_data);
     function_callback(id, &key, (void **)&scene->ed->runtime.thumbnail_cache, 0, user_data);
+  
+    function_callback(id,
+                      &key,
+                      (void **)&scene->eevee.light_cache_data,
+                      IDTYPE_CACHE_CB_FLAGS_PERSISTENT,
+                      user_data);
   }
 }
+
 
 static void scene_blend_write(BlendWriter *writer, ID *id, const void *id_address)
 {
@@ -1167,6 +1184,12 @@ static void scene_blend_write(BlendWriter *writer, ID *id, const void *id_addres
     BKE_collection_blend_write_nolib(
         writer,
         reinterpret_cast<Collection *>(BLO_write_get_id_buffer_temp_id(temp_embedded_id_buffer)));
+  }
+
+  /* Eevee Light-cache */
+  if (sce->eevee.light_cache_data && !BLO_write_is_undo(writer)) {
+    BLO_write_struct(writer, LightCache, sce->eevee.light_cache_data);
+    EEVEE_lightcache_blend_write(writer, sce->eevee.light_cache_data);
   }
 
   BKE_screen_view3d_shading_blend_write(writer, &sce->display.shading);
@@ -1496,6 +1519,19 @@ static void scene_blend_read_data(BlendDataReader *reader, ID *id)
     BKE_view_layer_blend_read_data(reader, view_layer);
   }
 
+  if (BLO_read_data_is_undo(reader)) {
+    /* If it's undo do nothing here, caches are handled by higher-level generic calling code. */
+  }
+  else {
+    /* else try to read the cache from file. */
+    BLO_read_struct(reader, LightCache, &sce->eevee.light_cache_data);
+    if (sce->eevee.light_cache_data) {
+      EEVEE_lightcache_blend_read_data(reader, sce->eevee.light_cache_data);
+    }
+  }
+
+  EEVEE_lightcache_info_update(&sce->eevee);
+
   BKE_screen_view3d_shading_blend_read_data(reader, &sce->display.shading);
 
   BLO_read_struct(reader, IDProperty, &sce->layer_properties);
@@ -1773,6 +1809,9 @@ void BKE_scene_copy_data_eevee(Scene *sce_dst, const Scene *sce_src)
 {
   /* Copy eevee data between scenes. */
   sce_dst->eevee = sce_src->eevee;
+  sce_dst->eevee.light_cache_data = nullptr;
+  sce_dst->eevee.light_cache_info[0] = '\0';
+  /* TODO: Copy the cache. */
 }
 
 Scene *BKE_scene_duplicate(Main *bmain, Scene *sce, eSceneCopyMethod type)

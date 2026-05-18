@@ -2318,7 +2318,7 @@ static void ui_apply_but(
   ColorBand *editcoba;
   CurveMapping *editcumap;
   CurveProfile *editprofile;
-  if (but_type == UI_BTYPE_COLORBAND) {
+  if (but_type == UI_BTYPE_COLORBAND || but_type == UI_BTYPE_OKLAB_COLORBAND) {
     uiButColorBand *but_coba = (uiButColorBand *)but;
     editcoba = but_coba->edit_coba;
   }
@@ -2333,7 +2333,7 @@ static void ui_apply_but(
   but->editstr = nullptr;
   but->editval = nullptr;
   but->editvec = nullptr;
-  if (but_type == UI_BTYPE_COLORBAND) {
+  if (but_type == UI_BTYPE_COLORBAND || but_type == UI_BTYPE_OKLAB_COLORBAND) {
     uiButColorBand *but_coba = (uiButColorBand *)but;
     but_coba->edit_coba = nullptr;
   }
@@ -2406,6 +2406,7 @@ static void ui_apply_but(
       ui_apply_but_VEC(C, but, data);
       break;
     case UI_BTYPE_COLORBAND:
+    case UI_BTYPE_OKLAB_COLORBAND:
       ui_apply_but_COLORBAND(C, but, data);
       break;
     case UI_BTYPE_CURVE:
@@ -2461,7 +2462,7 @@ static void ui_apply_but(
   but->editstr = editstr;
   but->editval = editval;
   but->editvec = editvec;
-  if (but_type == UI_BTYPE_COLORBAND) {
+  if (but_type == UI_BTYPE_COLORBAND || but_type == UI_BTYPE_OKLAB_COLORBAND) {
     uiButColorBand *but_coba = (uiButColorBand *)but;
     but_coba->edit_coba = editcoba;
   }
@@ -2837,6 +2838,7 @@ static bool ui_but_copy(bContext *C, uiBut *but, const bool copy_array)
       break;
 
     case UI_BTYPE_COLORBAND:
+    case UI_BTYPE_OKLAB_COLORBAND:
       ui_but_copy_colorband(but);
       break;
 
@@ -2925,6 +2927,7 @@ static void ui_but_paste(bContext *C, uiBut *but, uiHandleButtonData *data, cons
       break;
 
     case UI_BTYPE_COLORBAND:
+    case UI_BTYPE_OKLAB_COLORBAND:
       ui_but_paste_colorband(C, but, data);
       break;
 
@@ -4179,7 +4182,7 @@ static void ui_numedit_begin(uiBut *but, uiHandleButtonData *data)
     uiButCurveProfile *but_profile = (uiButCurveProfile *)but;
     but_profile->edit_profile = (CurveProfile *)but->poin;
   }
-  else if (but->type == UI_BTYPE_COLORBAND) {
+  else if (but->type == UI_BTYPE_COLORBAND || but->type == UI_BTYPE_OKLAB_COLORBAND) {
     uiButColorBand *but_coba = (uiButColorBand *)but;
     data->coba = (ColorBand *)but->poin;
     but_coba->edit_coba = data->coba;
@@ -4294,7 +4297,7 @@ static void ui_numedit_end(uiBut *but, uiHandleButtonData *data)
 {
   but->editval = nullptr;
   but->editvec = nullptr;
-  if (but->type == UI_BTYPE_COLORBAND) {
+  if (but->type == UI_BTYPE_COLORBAND || but->type == UI_BTYPE_OKLAB_COLORBAND) {
     uiButColorBand *but_coba = (uiButColorBand *)but;
     but_coba->edit_coba = nullptr;
   }
@@ -8327,6 +8330,7 @@ static int ui_do_button(bContext *C, uiBlock *block, uiBut *but, const wmEvent *
       retval = ui_do_but_UNITVEC(C, block, but, data, event);
       break;
     case UI_BTYPE_COLORBAND:
+    case UI_BTYPE_OKLAB_COLORBAND:
       retval = ui_do_but_COLORBAND(C, block, but, data, event);
       break;
     case UI_BTYPE_CURVE:
@@ -11089,7 +11093,7 @@ static int ui_handle_menu_event(bContext *C,
 
             /* Menu search if space-bar or #MenuTypeFlag::SearchOnKeyPress. */
             MenuType *mt = WM_menutype_find(menu->menu_idname, true);
-            if ((mt && bool(mt->flag & MenuTypeFlag::SearchOnKeyPress)) ||
+            if ((mt && bool(mt->flag & MenuTypeFlag::SearchOnKeyPress) && !bool(U.experimental.disable_search_on_keypress)) ||
                 event->type == EVT_SPACEKEY)
             {
               if ((level != 0) && (but == nullptr || !menu->menu_idname[0])) {

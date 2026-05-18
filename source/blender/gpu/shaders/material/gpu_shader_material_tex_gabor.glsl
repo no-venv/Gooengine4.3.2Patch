@@ -19,8 +19,28 @@
  */
 
 #pragma BLENDER_REQUIRE(gpu_shader_common_hash.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_base_lib.glsl)
-#pragma BLENDER_REQUIRE(gpu_shader_math_vector_lib.glsl)
+
+
+
+float goo_len_sqred(vec2 a)
+{
+  return dot(a, a);
+}
+float goo_len_sqred(vec3 a)
+{
+  return dot(a, a);
+}
+float goo_len_sqred(vec4 a)
+{
+  return dot(a, a);
+}
+
+float goo_atan2(float y, float x)
+{
+  return atan(y, x);
+}
+
+
 
 #define SHD_GABOR_TYPE_2D 0.0
 #define SHD_GABOR_TYPE_3D 1.0
@@ -60,7 +80,7 @@
  * normalization", to ensure a zero mean, which should help with normalization. */
 vec2 compute_2d_gabor_kernel(vec2 position, float frequency, float orientation)
 {
-  float distance_squared = length_squared(position);
+  float distance_squared = goo_len_sqred(position);
   float hann_window = 0.5 + 0.5 * cos(M_PI * distance_squared);
   float gaussian_envelop = exp(-M_PI * distance_squared);
   float windowed_gaussian_envelope = gaussian_envelop * hann_window;
@@ -134,7 +154,7 @@ vec2 compute_2d_gabor_noise_cell(
 
     /* The kernel is windowed beyond the unit distance, so early exit with a zero for points that
      * are further than a unit radius. */
-    if (length_squared(position_in_kernel_space) >= 1.0) {
+    if (goo_len_sqred(position_in_kernel_space) >= 1.0) {
       continue;
     }
 
@@ -179,7 +199,7 @@ vec2 compute_2d_gabor_noise(vec2 coordinates,
  * vector, so we just need to scale it by the frequency value. */
 vec2 compute_3d_gabor_kernel(vec3 position, float frequency, vec3 orientation)
 {
-  float distance_squared = length_squared(position);
+  float distance_squared = goo_len_sqred(position);
   float hann_window = 0.5 + 0.5 * cos(M_PI * distance_squared);
   float gaussian_envelop = exp(-M_PI * distance_squared);
   float windowed_gaussian_envelope = gaussian_envelop * hann_window;
@@ -245,7 +265,7 @@ vec2 compute_3d_gabor_noise_cell(
 
     /* The kernel is windowed beyond the unit distance, so early exit with a zero for points that
      * are further than a unit radius. */
-    if (length_squared(position_in_kernel_space) >= 1.0) {
+    if (goo_len_sqred(position_in_kernel_space) >= 1.0) {
       continue;
     }
 
@@ -320,7 +340,7 @@ void node_tex_gabor(vec3 coordinates,
 
   /* Compute the phase based on equation (9) in Tricard's paper. But remap the phase into the
    * [0, 1] range. */
-  output_phase = (atan2(phasor.y, phasor.x) + M_PI) / (2.0 * M_PI);
+  output_phase = (goo_atan2(phasor.y, phasor.x) + M_PI) / (2.0 * M_PI);
 
   /* Compute the intensity based on equation (8) in Tricard's paper. */
   output_intensity = length(phasor) / normalization_factor;

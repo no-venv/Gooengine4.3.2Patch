@@ -27,6 +27,10 @@ float pow2f(float x)
 {
   return x * x;
 }
+float safe_floored_modulo(float a, float b, float c)
+{
+  return (b != 0.0) ? a - floor(a / b) * b : 0.0;
+}
 float pow3f(float x)
 {
   return x * x * x;

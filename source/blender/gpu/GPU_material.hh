@@ -84,11 +84,19 @@ enum eGPUMaterialFlag {
 
   GPU_MATFLAG_BARYCENTRIC = (1 << 20),
 
+  /* Optimization to only add the branches of the principled shader that are necessary. */
+  GPU_MATFLAG_PRINCIPLED_COAT = (1 << 21),
+  GPU_MATFLAG_PRINCIPLED_METALLIC = (1 << 22),
+  GPU_MATFLAG_PRINCIPLED_DIELECTRIC = (1 << 23),
+  GPU_MATFLAG_PRINCIPLED_GLASS = (1 << 24),
+  GPU_MATFLAG_PRINCIPLED_ANY = (1 << 25),
+
   /* Tells the render engine the material was just compiled or updated. */
   GPU_MATFLAG_UPDATED = (1 << 29),
 
   /* HACK(fclem) Tells the environment texture node to not bail out if empty. */
   GPU_MATFLAG_LOOKDEV_HACK = (1 << 30),
+  GPU_MATFLAG_SET_DEPTH = (1 << 31),
 };
 
 ENUM_OPERATORS(eGPUMaterialFlag, GPU_MATFLAG_LOOKDEV_HACK);
@@ -220,6 +228,10 @@ char *GPU_material_split_sub_function(GPUMaterial *material,
                                       GPUNodeLink **link);
 
 bool GPU_material_sss_profile_create(GPUMaterial *material, float radii[3]);
+GPUUniformBuf *GPU_material_sss_profile_get(GPUMaterial *material,
+                                            int sample_len,
+                                            GPUTexture **tex_profile);
+                                            
 /**
  * High level functions to create and use GPU materials.
  */
@@ -322,9 +334,13 @@ bool GPU_material_has_displacement_output(GPUMaterial *mat);
 
 void GPU_material_flag_set(GPUMaterial *mat, eGPUMaterialFlag flag);
 bool GPU_material_flag_get(const GPUMaterial *mat, eGPUMaterialFlag flag);
+bool GPU_material_gooengine_get(const GPUMaterial *mat);
 eGPUMaterialFlag GPU_material_flag(const GPUMaterial *mat);
 bool GPU_material_recalc_flag_get(GPUMaterial *mat);
 uint64_t GPU_material_uuid_get(GPUMaterial *mat);
+
+void GPU_material_light_group_bits_get(GPUMaterial *mat, int *out);
+void GPU_material_light_group_shadow_bits_get(GPUMaterial *mat, int *out);
 
 void GPU_pass_cache_init();
 void GPU_pass_cache_garbage_collect();

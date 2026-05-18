@@ -92,6 +92,9 @@ void DEG_add_scene_camera_relation(DepsNodeHandle *node_handle,
   if (scene->camera != nullptr) {
     DEG_add_object_relation(node_handle, scene->camera, component, description);
   }
+  if (scene->gn_camera_override != nullptr) {
+    DEG_add_object_relation(node_handle, scene->gn_camera_override, component, description);
+  }
 
   /* Like DepsgraphNodeBuilder::build_scene_camera(), we also need to account for other cameras
    * referenced by markers. */

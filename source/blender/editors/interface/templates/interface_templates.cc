@@ -3959,6 +3959,180 @@ static void colorband_buttons_layout(uiLayout *layout,
   }
 }
 
+static void oklab_colorband_buttons_layout(uiLayout *layout,
+                                          uiBlock *block,
+                                          ColorBand *coba,
+                                          const rctf *butr,
+                                          const RNAUpdateCb &cb,
+                                          int expand)
+{
+  /* Use a custom OKLab colorband - no label needed, context makes it clear */
+  uiBut *bt;
+  const float unit = BLI_rctf_size_x(butr) / 14.0f;
+  const float xs = butr->xmin;
+  const float ys = butr->ymin;
+
+  PointerRNA ptr = RNA_pointer_create(cb.ptr.owner_id, &RNA_ColorRamp, coba);
+
+  uiLayout *split = uiLayoutSplit(layout, 0.4f, false);
+
+  UI_block_emboss_set(block, UI_EMBOSS_NONE);
+  UI_block_align_begin(block);
+  uiLayout *row = uiLayoutRow(split, false);
+
+  bt = uiDefIconTextBut(block,
+                        UI_BTYPE_BUT,
+                        0,
+                        ICON_ADD,
+                        "",
+                        0,
+                        0,
+                        2.0f * unit,
+                        UI_UNIT_Y,
+                        nullptr,
+                        0,
+                        0,
+                        TIP_("Add a new color stop to the color ramp"));
+  UI_but_func_set(bt, [coba, cb](bContext &C) { colorband_add(C, cb, *coba); });
+
+  bt = uiDefIconTextBut(block,
+                        UI_BTYPE_BUT,
+                        0,
+                        ICON_REMOVE,
+                        "",
+                        xs + 2.0f * unit,
+                        ys + UI_UNIT_Y,
+                        2.0f * unit,
+                        UI_UNIT_Y,
+                        nullptr,
+                        0,
+                        0,
+                        TIP_("Delete the active position"));
+  UI_but_func_set(bt, [coba, cb](bContext &C) {
+    if (BKE_colorband_element_remove(coba, coba->cur)) {
+      rna_update_cb(C, cb);
+      ED_undo_push(&C, "Delete Color Ramp Stop");
+    }
+  });
+
+  RNAUpdateCb *tools_cb = MEM_new<RNAUpdateCb>(__func__, cb);
+  bt = uiDefIconBlockBut(block,
+                         colorband_tools_fn,
+                         tools_cb,
+                         0,
+                         ICON_DOWNARROW_HLT,
+                         xs + 4.0f * unit,
+                         ys + UI_UNIT_Y,
+                         2.0f * unit,
+                         UI_UNIT_Y,
+                         TIP_("Tools"));
+  /* Pass ownership of `tools_cb` to the button. */
+  UI_but_funcN_set(
+      bt,
+      [](bContext *, void *, void *) {},
+      tools_cb,
+      nullptr,
+      but_func_argN_free<RNAUpdateCb>,
+      but_func_argN_copy<RNAUpdateCb>);
+
+  UI_block_align_end(block);
+  UI_block_emboss_set(block, UI_EMBOSS);
+
+  /* OKLab uses its own interpolation method, so no interpolation controls needed */
+  row = uiLayoutRow(split, false);
+
+  UI_block_align_begin(block);
+  uiItemR(row, &ptr, "color_mode", UI_ITEM_NONE, "", ICON_NONE);
+  /* Note: OKLab interpolation is always active regardless of color_mode setting */
+  UI_block_align_end(block);
+
+  row = uiLayoutRow(layout, false);
+
+  /* Create custom OKLab colorband button instead of using UI_BTYPE_COLORBAND */
+  bt = uiDefBut(
+      block, UI_BTYPE_OKLAB_COLORBAND, 0, "", xs, ys, BLI_rctf_size_x(butr), UI_UNIT_Y, coba, 0, 0, "");
+  bt->rnapoin = cb.ptr;
+  bt->rnaprop = cb.prop;
+  UI_but_func_set(bt, [cb](bContext &C) { rna_update_cb(C, cb); });
+
+  row = uiLayoutRow(layout, false);
+
+  if (coba->tot) {
+    CBData *cbd = coba->data + coba->cur;
+
+    ptr = RNA_pointer_create(cb.ptr.owner_id, &RNA_ColorRampElement, cbd);
+
+    if (!expand) {
+      split = uiLayoutSplit(layout, 0.3f, false);
+
+      row = uiLayoutRow(split, false);
+      bt = uiDefButS(block,
+                     UI_BTYPE_NUM,
+                     0,
+                     "",
+                     0,
+                     0,
+                     5.0f * UI_UNIT_X,
+                     UI_UNIT_Y,
+                     &coba->cur,
+                     0.0,
+                     float(std::max(0, coba->tot - 1)),
+                     TIP_("Choose active color stop"));
+      UI_but_number_step_size_set(bt, 1);
+
+      row = uiLayoutRow(split, false);
+      uiItemR(row, &ptr, "position", UI_ITEM_NONE, IFACE_("Pos"), ICON_NONE);
+
+      row = uiLayoutRow(layout, false);
+      uiItemR(row, &ptr, "color", UI_ITEM_NONE, "", ICON_NONE);
+    }
+    else {
+      split = uiLayoutSplit(layout, 0.5f, false);
+      uiLayout *subsplit = uiLayoutSplit(split, 0.35f, false);
+
+      row = uiLayoutRow(subsplit, false);
+      bt = uiDefButS(block,
+                     UI_BTYPE_NUM,
+                     0,
+                     "",
+                     0,
+                     0,
+                     5.0f * UI_UNIT_X,
+                     UI_UNIT_Y,
+                     &coba->cur,
+                     0.0,
+                     float(std::max(0, coba->tot - 1)),
+                     TIP_("Choose active color stop"));
+      UI_but_number_step_size_set(bt, 1);
+
+      row = uiLayoutRow(subsplit, false);
+      uiItemR(row, &ptr, "position", UI_ITEM_R_SLIDER, IFACE_("Pos"), ICON_NONE);
+
+      row = uiLayoutRow(split, false);
+      uiItemR(row, &ptr, "color", UI_ITEM_NONE, "", ICON_NONE);
+    }
+
+    /* Some special (rather awkward) treatment to update UI state on certain property changes. */
+    LISTBASE_FOREACH_BACKWARD (uiBut *, but, &block->buttons) {
+      if (but->rnapoin.data != ptr.data) {
+        continue;
+      }
+      if (!but->rnaprop) {
+        continue;
+      }
+
+      const char *prop_identifier = RNA_property_identifier(but->rnaprop);
+      if (STREQ(prop_identifier, "position")) {
+        UI_but_func_set(but, colorband_update_cb, but, coba);
+      }
+
+      if (STREQ(prop_identifier, "color")) {
+        UI_but_func_set(bt, [cb](bContext &C) { rna_update_cb(C, cb); });
+      }
+    }
+  }
+}
+
 void uiTemplateColorRamp(uiLayout *layout, PointerRNA *ptr, const char *propname, bool expand)
 {
   PropertyRNA *prop = RNA_struct_find_property(ptr, propname);
@@ -3984,6 +4158,36 @@ void uiTemplateColorRamp(uiLayout *layout, PointerRNA *ptr, const char *propname
   UI_block_lock_set(block, (id && !ID_IS_EDITABLE(id)), ERROR_LIBDATA_MESSAGE);
 
   colorband_buttons_layout(
+      layout, block, static_cast<ColorBand *>(cptr.data), &rect, RNAUpdateCb{*ptr, prop}, expand);
+
+  UI_block_lock_clear(block);
+}
+
+void uiTemplateOKLabColorRamp(uiLayout *layout, PointerRNA *ptr, const char *propname, bool expand)
+{
+  PropertyRNA *prop = RNA_struct_find_property(ptr, propname);
+
+  if (!prop || RNA_property_type(prop) != PROP_POINTER) {
+    return;
+  }
+
+  const PointerRNA cptr = RNA_property_pointer_get(ptr, prop);
+  if (!cptr.data || !RNA_struct_is_a(cptr.type, &RNA_ColorRamp)) {
+    return;
+  }
+
+  rctf rect;
+  rect.xmin = 0;
+  rect.xmax = 10.0f * UI_UNIT_X;
+  rect.ymin = 0;
+  rect.ymax = 19.5f * UI_UNIT_X;
+
+  uiBlock *block = uiLayoutAbsoluteBlock(layout);
+
+  ID *id = cptr.owner_id;
+  UI_block_lock_set(block, (id && ID_IS_LINKED(id)), ERROR_LIBDATA_MESSAGE);
+
+  oklab_colorband_buttons_layout(
       layout, block, static_cast<ColorBand *>(cptr.data), &rect, RNAUpdateCb{*ptr, prop}, expand);
 
   UI_block_lock_clear(block);

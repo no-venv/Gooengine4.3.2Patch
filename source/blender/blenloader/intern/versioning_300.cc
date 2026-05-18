@@ -81,6 +81,7 @@
 #include "BKE_node.hh"
 #include "BKE_screen.hh"
 #include "BKE_workspace.hh"
+#include "BKE_text.h"
 
 #include "RNA_access.hh"
 #include "RNA_enum_types.hh"
@@ -1363,6 +1364,17 @@ void do_versions_after_linking_300(FileData * /*fd*/, Main *bmain)
       }
     }
     FOREACH_NODETREE_END;
+  }
+
+  /* Goo engine version warning script - remove the old one if it exists. */
+  if (!MAIN_VERSION_FILE_ATLEAST(bmain, 306, 0)) {
+    LISTBASE_FOREACH_MUTABLE (Text *, text, &bmain->texts) {
+      if (strcmp(text->id.name, "TX.version_warning.py") > 0) {
+        continue;
+      }
+      BLI_remlink(&bmain->texts, text);
+      BKE_id_free(bmain, text);
+    }
   }
 
   if (!MAIN_VERSION_FILE_ATLEAST(bmain, 306, 13)) {

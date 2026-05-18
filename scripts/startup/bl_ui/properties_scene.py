@@ -49,6 +49,7 @@ class SCENE_PT_scene(SceneButtonsPanel, Panel):
         scene = context.scene
 
         layout.prop(scene, "camera")
+        layout.prop(scene, "gn_camera_override")
         layout.prop(scene, "background_set")
         layout.prop(scene, "active_clip", text="Active Clip")
 

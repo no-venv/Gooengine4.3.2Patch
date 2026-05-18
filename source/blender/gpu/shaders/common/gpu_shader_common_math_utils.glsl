@@ -7,6 +7,11 @@
 /* WORKAROUND: To be removed once we port all code to use `gpu_shader_math_base_lib.glsl`. */
 #ifndef GPU_SHADER_MATH_BASE_LIB_GLSL
 
+float safe_floored_modulo(float a, float b, float c)
+{
+  return (b != 0.0) ? a - floor(a / b) * b : 0.0;
+}
+
 float safe_divide(float a, float b)
 {
   return (b != 0.0) ? a / b : 0.0;

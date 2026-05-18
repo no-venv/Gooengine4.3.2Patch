@@ -73,7 +73,7 @@ static bool eyedropper_colorband_init(bContext *C, wmOperator *op)
     /* pass */
   }
   else {
-    if (but->type == UI_BTYPE_COLORBAND) {
+    if (but->type == UI_BTYPE_COLORBAND || but->type == UI_BTYPE_OKLAB_COLORBAND) {
       /* When invoked with a hotkey, we can find the band in 'but->poin'. */
       band = (ColorBand *)but->poin;
     }
@@ -304,7 +304,7 @@ static int eyedropper_colorband_exec(bContext *C, wmOperator *op)
 static bool eyedropper_colorband_poll(bContext *C)
 {
   uiBut *but = UI_context_active_but_get(C);
-  if (but && but->type == UI_BTYPE_COLORBAND) {
+  if (but && (but->type == UI_BTYPE_COLORBAND || but->type == UI_BTYPE_OKLAB_COLORBAND)) {
     return true;
   }
   const PointerRNA ptr = CTX_data_pointer_get_type(C, "color_ramp", &RNA_ColorRamp);

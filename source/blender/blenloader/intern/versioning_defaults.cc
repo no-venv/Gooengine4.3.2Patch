@@ -338,7 +338,7 @@ void BLO_update_defaults_workspace(WorkSpace *workspace, const char *app_templat
 
 static void blo_update_defaults_scene(Main *bmain, Scene *scene)
 {
-  STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE_NEXT);
+  STRNCPY(scene->r.engine, RE_engine_id_BLENDER_EEVEE);
 
   scene->r.cfra = 1.0f;
 
@@ -370,6 +370,12 @@ static void blo_update_defaults_scene(Main *bmain, Scene *scene)
   copy_v3_v3(scene->display.light_direction, blender::float3(M_SQRT1_3));
   copy_v2_fl2(scene->safe_areas.title, 0.1f, 0.05f);
   copy_v2_fl2(scene->safe_areas.action, 0.035f, 0.035f);
+
+  /* Change default cube-map quality. */
+  scene->eevee.gi_filter_quality = 3.0f;
+
+  /* Enable Soft Shadows by default. */
+  scene->eevee.flag |= SCE_EEVEE_SHADOW_SOFT;
 
   /* Default Rotate Increment. */
   const float default_snap_angle_increment = DEG2RADF(5.0f);

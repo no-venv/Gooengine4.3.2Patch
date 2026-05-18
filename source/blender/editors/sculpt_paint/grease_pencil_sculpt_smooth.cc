@@ -28,12 +28,13 @@ namespace blender::ed::sculpt_paint::greasepencil {
 class SmoothOperation : public GreasePencilStrokeOperationCommon {
  private:
   bool temp_smooth_;
+  int context_type_;
 
  public:
   using GreasePencilStrokeOperationCommon::GreasePencilStrokeOperationCommon;
 
-  SmoothOperation(const BrushStrokeMode stroke_mode, const bool temp_smooth = false)
-      : GreasePencilStrokeOperationCommon(stroke_mode), temp_smooth_(temp_smooth)
+  SmoothOperation(const BrushStrokeMode stroke_mode, const bool temp_smooth = false, const int context_type = 0)
+      : GreasePencilStrokeOperationCommon(stroke_mode), temp_smooth_(temp_smooth), context_type_(context_type)
   {
   }
 
@@ -101,7 +102,7 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
     const VArray<bool> selection_varray = VArray<bool>::ForSpan(selection_array);
 
     bool changed = false;
-    if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_POSITION) {
+    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_POSITION) & context_type_ == 0) || context_type_ == 1) {
       MutableSpan<float3> positions = curves.positions_for_write();
       geometry::smooth_curve_attribute(curves.curves_range(),
                                        points_by_curve,
@@ -115,7 +116,7 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
       params.drawing.tag_positions_changed();
       changed = true;
     }
-    if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_STRENGTH) {
+    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_STRENGTH) & context_type_ == 0) || context_type_ == 2) {
       MutableSpan<float> opacities = params.drawing.opacities_for_write();
       geometry::smooth_curve_attribute(curves.curves_range(),
                                        points_by_curve,
@@ -128,7 +129,7 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
                                        opacities);
       changed = true;
     }
-    if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_THICKNESS) {
+    if (((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_THICKNESS) & context_type_ == 0) || context_type_ == 3) {
       const MutableSpan<float> radii = params.drawing.radii_for_write();
       geometry::smooth_curve_attribute(curves.curves_range(),
                                        points_by_curve,
@@ -142,7 +143,7 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
       curves.tag_radii_changed();
       changed = true;
     }
-    if (sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_UV) {
+    if ((sculpt_mode_flag & GP_SCULPT_FLAGMODE_APPLY_UV) & context_type_ == 0) {
       bke::SpanAttributeWriter<float> rotations = attributes.lookup_or_add_for_write_span<float>(
           "rotation", bke::AttrDomain::Point);
       geometry::smooth_curve_attribute(curves.curves_range(),
@@ -163,9 +164,9 @@ void SmoothOperation::on_stroke_extended(const bContext &C, const InputSample &e
 }
 
 std::unique_ptr<GreasePencilStrokeOperation> new_smooth_operation(
-    const BrushStrokeMode stroke_mode, const bool temp_smooth)
+    const BrushStrokeMode stroke_mode, const bool temp_smooth, const int context_type)
 {
-  return std::make_unique<SmoothOperation>(stroke_mode, temp_smooth);
+  return std::make_unique<SmoothOperation>(stroke_mode, temp_smooth, context_type);
 }
 
 }  // namespace blender::ed::sculpt_paint::greasepencil

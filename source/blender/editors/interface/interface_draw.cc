@@ -14,6 +14,7 @@
 #include "DNA_curveprofile_types.h"
 #include "DNA_movieclip_types.h"
 #include "DNA_screen_types.h"
+#include "DNA_node_types.h"
 
 #include "BLI_math_rotation.h"
 #include "BLI_polyfill_2d.h"
@@ -27,6 +28,7 @@
 #include "BKE_colortools.hh"
 #include "BKE_curveprofile.h"
 #include "BKE_tracking.h"
+#include "BKE_node.hh"
 
 #include "IMB_colormanagement.hh"
 #include "IMB_imbuf.hh"
@@ -1388,7 +1390,9 @@ void ui_draw_but_COLORBAND(uiBut *but, const uiWidgetColors *wcol, const rcti *r
   immBegin(GPU_PRIM_TRI_STRIP, (sizex + 1) * 2);
   for (int a = 0; a <= sizex; a++) {
     const float pos = float(a) / sizex;
+    
     BKE_colorband_evaluate(coba, pos, colf);
+    
     if (display) {
       IMB_colormanagement_scene_linear_to_display_v3(colf, display);
     }
@@ -1408,7 +1412,136 @@ void ui_draw_but_COLORBAND(uiBut *but, const uiWidgetColors *wcol, const rcti *r
   immBegin(GPU_PRIM_TRI_STRIP, (sizex + 1) * 2);
   for (int a = 0; a <= sizex; a++) {
     const float pos = float(a) / sizex;
+    
     BKE_colorband_evaluate(coba, pos, colf);
+    
+    if (display) {
+      IMB_colormanagement_scene_linear_to_display_v3(colf, display);
+    }
+
+    v1[0] = v2[0] = x1 + a;
+
+    immAttr4f(col_id, colf[0], colf[1], colf[2], 1.0f);
+    immVertex2fv(pos_id, v1);
+    immVertex2fv(pos_id, v2);
+  }
+  immEnd();
+
+  immUnbindProgram();
+
+  /* New format */
+  format = immVertexFormat();
+  pos_id = GPU_vertformat_attr_add(format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+
+  /* layer: draw handles */
+  for (int a = 0; a < coba->tot; a++, cbd++) {
+    if (a != coba->cur) {
+      const float pos = x1 + cbd->pos * (sizex - 1) + 1;
+      ui_draw_colorband_handle(pos_id, rect, pos, &cbd->r, display, false);
+    }
+  }
+
+  /* layer: active handle */
+  if (coba->tot != 0) {
+    cbd = &coba->data[coba->cur];
+    const float pos = x1 + cbd->pos * (sizex - 1) + 1;
+    ui_draw_colorband_handle(pos_id, rect, pos, &cbd->r, display, true);
+  }
+}
+
+void ui_draw_but_OKLAB_COLORBAND(uiBut *but, const uiWidgetColors *wcol, const rcti *rect)
+{
+  ColorManagedDisplay *display = ui_block_cm_display_get(but->block);
+  uint pos_id, col_id;
+
+  uiButColorBand *but_coba = (uiButColorBand *)but;
+  ColorBand *coba = (but_coba->edit_coba == nullptr) ? (ColorBand *)but->poin :
+                                                       but_coba->edit_coba;
+
+  if (coba == nullptr) {
+    return;
+  }
+
+  const float x1 = rect->xmin + U.pixelsize;
+  const float sizex = rect->xmax - x1 - U.pixelsize;
+  const float y1 = rect->ymin + U.pixelsize;
+  const float sizey = rect->ymax - y1 - U.pixelsize;
+  const float sizey_solid = sizey * 0.25f;
+
+  /* exit early if too narrow */
+  if (sizex <= 0) {
+    return;
+  }
+
+  GPU_blend(GPU_BLEND_ALPHA);
+
+  /* Line width outline. */
+  GPUVertFormat *format = immVertexFormat();
+  pos_id = GPU_vertformat_attr_add(format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+  immBindBuiltinProgram(GPU_SHADER_3D_UNIFORM_COLOR);
+  immUniformColor4ubv(wcol->outline);
+  immBegin(GPU_PRIM_TRI_STRIP, 4);
+  immVertex2f(pos_id, rect->xmin, rect->ymin);
+  immVertex2f(pos_id, rect->xmax, rect->ymin);
+  immVertex2f(pos_id, rect->xmin, rect->ymax);
+  immVertex2f(pos_id, rect->xmax, rect->ymax);
+  immEnd();
+  immUnbindProgram();
+
+  /* Drawing the checkerboard. */
+  immBindBuiltinProgram(GPU_SHADER_2D_CHECKER);
+  const float checker_dark = UI_ALPHA_CHECKER_DARK / 255.0f;
+  const float checker_light = UI_ALPHA_CHECKER_LIGHT / 255.0f;
+  immUniform4f("color1", checker_dark, checker_dark, checker_dark, 1.0f);
+  immUniform4f("color2", checker_light, checker_light, checker_light, 1.0f);
+  immUniform1i("size", 8);
+  immRectf(pos_id, x1, y1, x1 + sizex, y1 + sizey);
+  immUnbindProgram();
+
+  /* New format */
+  format = immVertexFormat();
+  pos_id = GPU_vertformat_attr_add(format, "pos", GPU_COMP_F32, 2, GPU_FETCH_FLOAT);
+  col_id = GPU_vertformat_attr_add(format, "color", GPU_COMP_F32, 4, GPU_FETCH_FLOAT);
+  immBindBuiltinProgram(GPU_SHADER_3D_SMOOTH_COLOR);
+
+  CBData *cbd = coba->data;
+
+  float v1[2], v2[2];
+  float colf[4] = {0, 0, 0, 0}; /* initialize in case the colorband isn't valid */
+
+  v1[1] = y1 + sizey_solid;
+  v2[1] = y1 + sizey;
+
+  immBegin(GPU_PRIM_TRI_STRIP, (sizex + 1) * 2);
+  for (int a = 0; a <= sizex; a++) {
+    const float pos = float(a) / sizex;
+    
+    /* Use OKLab evaluation instead of regular evaluation */
+    BKE_colorband_evaluate_oklab(coba, pos, colf);
+    
+    if (display) {
+      IMB_colormanagement_scene_linear_to_display_v3(colf, display);
+    }
+
+    v1[0] = v2[0] = x1 + a;
+
+    immAttr4fv(col_id, colf);
+    immVertex2fv(pos_id, v1);
+    immVertex2fv(pos_id, v2);
+  }
+  immEnd();
+
+  /* layer: color ramp without alpha for reference when manipulating ramp properties */
+  v1[1] = y1;
+  v2[1] = y1 + sizey_solid;
+
+  immBegin(GPU_PRIM_TRI_STRIP, (sizex + 1) * 2);
+  for (int a = 0; a <= sizex; a++) {
+    const float pos = float(a) / sizex;
+    
+    /* Use OKLab evaluation instead of regular evaluation */
+    BKE_colorband_evaluate_oklab(coba, pos, colf);
+    
     if (display) {
       IMB_colormanagement_scene_linear_to_display_v3(colf, display);
     }

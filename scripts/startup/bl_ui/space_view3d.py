@@ -155,6 +155,7 @@ class VIEW3D_HT_tool_header(Header):
             sub.prop(ob, "use_mesh_mirror_x", text="X", toggle=True)
             sub.prop(ob, "use_mesh_mirror_y", text="Y", toggle=True)
             sub.prop(ob, "use_mesh_mirror_z", text="Z", toggle=True)
+            sub.prop(context.object.data, "use_mirror_topology", text="T", toggle=True)
             if mode_string == 'EDIT_MESH':
                 layout.prop(tool_settings, "use_mesh_automerge", text="")
             elif mode_string == 'PAINT_WEIGHT':
@@ -230,7 +231,7 @@ class VIEW3D_HT_tool_header(Header):
             layout.prop(tool_settings, "use_gpencil_automerge_strokes", text="")
             layout.prop(tool_settings, "use_gpencil_weight_data_add", text="", icon='WPAINT_HLT')
             layout.prop(tool_settings, "use_gpencil_draw_onback", text="", icon='MOD_OPACITY')
-
+            layout.prop(tool_settings, "use_gpencil_autoclose_strokes", text="")
 
 class _draw_tool_settings_context_mode:
     @staticmethod
@@ -4208,7 +4209,8 @@ class VIEW3D_MT_pose_constraints(Menu):
         layout.operator("pose.constraint_add_with_targets", text="Add (with Targets)...")
         layout.operator("pose.constraints_copy")
         layout.operator("pose.constraints_clear")
-
+        layout.operator("pose.constraints_merge")
+        
 
 class VIEW3D_MT_pose_names(Menu):
     bl_label = "Names"
@@ -6428,7 +6430,7 @@ class VIEW3D_PT_shading_lighting(Panel):
             return True
         if shading.type == 'RENDERED':
             engine = context.scene.render.engine
-            if engine == 'BLENDER_EEVEE_NEXT':
+            if engine in {'BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'}:
                 return True
         return False
 
@@ -6708,7 +6710,7 @@ class VIEW3D_PT_shading_render_pass(Panel):
     bl_region_type = 'HEADER'
     bl_label = "Render Pass"
     bl_parent_id = "VIEW3D_PT_shading"
-    COMPAT_ENGINES = {'BLENDER_EEVEE_NEXT'}
+    COMPAT_ENGINES = {'BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'}
 
     @classmethod
     def poll(cls, context):
@@ -6899,6 +6901,7 @@ class VIEW3D_PT_overlay_object(Panel):
 
         sub = split.column(align=True)
         sub.prop(overlay, "show_bones", text="Bones")
+        sub.prop(overlay, "isolate_bones", text="Isolate Bones")
         sub.prop(overlay, "show_motion_paths")
         sub.prop(overlay, "show_object_origins", text="Origins")
         subsub = sub.column()

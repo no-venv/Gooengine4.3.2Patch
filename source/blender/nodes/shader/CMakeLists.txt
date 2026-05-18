@@ -48,7 +48,13 @@ set(SRC
   nodes/node_shader_camera.cc
   nodes/node_shader_clamp.cc
   nodes/node_shader_color_ramp.cc
+  nodes/node_shader_oklab_color_ramp.cc
+  nodes/node_shader_tex_hexagon.cc
+  nodes/node_shader_twirl.cc
+  nodes/node_shader_water_ripples.cc
+  nodes/node_shader_light_info.cc
   nodes/node_shader_common.cc
+  nodes/node_shader_curvature.cc
   nodes/node_shader_curves.cc
   nodes/node_shader_displacement.cc
   nodes/node_shader_eevee_specular.cc
@@ -82,12 +88,19 @@ set(SRC
   nodes/node_shader_point_info.cc
   nodes/node_shader_rgb.cc
   nodes/node_shader_rgb_to_bw.cc
+  nodes/node_shader_screenspace_info.cc
   nodes/node_shader_script.cc
+  nodes/node_shader_sdf_noise.cc
+  nodes/node_shader_sdf_op.cc
+  nodes/node_shader_sdf_primitive.cc
+  nodes/node_shader_sdf_vector_op.cc
   nodes/node_shader_sepcomb_color.cc
   nodes/node_shader_sepcomb_hsv.cc
   nodes/node_shader_sepcomb_rgb.cc
   nodes/node_shader_sepcomb_xyz.cc
+  nodes/node_shader_set_depth.cc
   nodes/node_shader_shader_to_rgb.cc
+  nodes/node_shader_shader_info.cc
   nodes/node_shader_squeeze.cc
   nodes/node_shader_subsurface_scattering.cc
   nodes/node_shader_tangent.cc

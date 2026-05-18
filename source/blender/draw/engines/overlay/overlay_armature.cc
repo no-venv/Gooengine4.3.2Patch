@@ -3117,10 +3117,12 @@ void Armatures::draw_armature_pose(Armatures::DrawContext *ctx)
     if (!is_pose_select) {
       draw_bone_relations(ctx, draw_strat, bone_ptr, boneflag);
     }
-
+    
     draw_strat.update_display_matrix(bone_ptr);
-    if (!is_pose_select || draw_strat.culling_test(view, ob, pchan)) {
-      draw_strat.draw_bone(ctx, bone_ptr, boneflag, select_id);
+    if (!((G.moving & (G_TRANSFORM_OBJ | G_TRANSFORM_EDIT)) != 0 && ctx->isolate_bones && !(bone->flag & BONE_SELECTED))) {
+      if (!is_pose_select || draw_strat.culling_test(view, ob, pchan)) {
+        draw_strat.draw_bone(ctx, bone_ptr, boneflag, select_id);
+      }
     }
 
     /* Below this point nothing is used for selection queries. */
@@ -3174,6 +3176,7 @@ static void armature_context_setup(Armatures::DrawContext *ctx,
   ctx->show_relations = pd->armature.show_relations;
   ctx->do_relations = !DRW_state_is_select() && pd->armature.show_relations &&
                       is_edit_or_pose_mode;
+  ctx->isolate_bones  = pd->overlay.flag & V3D_OVERLAY_ISOLATE_BONES && draw_mode == ARM_DRAW_MODE_POSE;
   ctx->const_color = DRW_state_is_select() ? select_const_color : const_color;
   ctx->const_wire = ((ob->base_flag & BASE_SELECTED) && (pd->v3d_flag & V3D_SELECT_OUTLINE) ?
                          1.5f :
